@@ -52,7 +52,7 @@ def train_model(
         lr=lr,
     )
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=1, verbose=True
+        optimizer, mode="min", factor=0.5, patience=1
     )
     scaler = torch.amp.GradScaler("cuda", enabled=torch.cuda.is_available())
 
