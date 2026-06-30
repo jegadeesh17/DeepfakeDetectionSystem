@@ -1,0 +1,31 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Models and Checkpoints
+*.keras
+*.pth
+*.pt
+*.h5
+*.hdf5
+*.ckpt
+models/
+!models/.gitkeep
+
+# Datasets
+data/
+!data/.gitkeep
+dataset/
+*.zip
+*.tar
+*.gz
+
+# Virtual environments
+venv/
+env/
+.env
+
+# OS generated files
+.DS_Store
+Thumbs.db
