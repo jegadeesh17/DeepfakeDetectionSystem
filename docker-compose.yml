@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  deepfake-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deepfake-detector-api
+    restart: unless-stopped
+    ports:
+      - "8004:8004"
+    environment:
+      - PORT=8004
+      - MODEL_ARCH=EfficientNet
+      - DEVICE=cpu

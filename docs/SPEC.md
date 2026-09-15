@@ -1,0 +1,86 @@
+# Deepfake Detection System — Technical Specification
+
+---
+
+## 1. Document Control & System Overview
+
+| Field | Specification |
+| :--- | :--- |
+| **System** | Deepfake Facial Manipulation Detection & Attribution Engine |
+| **Document** | `docs/SPEC.md` |
+| **Version** | 2.0.0 (Production Grade) |
+| **Domain** | Multimodal AI / Computer Vision / Trust & Safety |
+| **Maintainer** | Applied AI / Vision Systems Engineering |
+
+### 1.1 Problem Definition & Operational Objective
+Synthetic facial manipulation (deepfakes, reenactment, swap) presents severe disinformation, fraud, and identity verification risks. This platform provides an end-to-end Computer Vision inference service that:
+1. Detects facial bounding boxes using Haar Cascade face alignment with a fixed $20\%$ bounding margin.
+2. Extracts fine-grained spatial and frequency artifacts using a fine-tuned **EfficientNet-B0** convolutional neural network backbone.
+3. Outputs calibrated posterior probabilities ($\text{P}(\text{FAKE})$ vs $\text{P}(\text{REAL})$) and generates visual visual attribution heatmaps via **Grad-CAM** highlighting manipulation regions.
+
+---
+
+## 2. System Architecture
+
+```mermaid
+flowchart TD
+    A[Raw Image / Video Frame] --> B[FastAPI Gateway: POST /predict]
+    B --> C[Face Detection & Cropping Engine (Haar Cascade, Margin=0.2)]
+    C -->|Face Detected| D[Aligned Facial Crop 224x224]
+    C -->|No Face Found| E[Fallback: Whole Image Resizing]
+    D --> F[Tensor Normalization: ImageNet Mean & Std]
+    E --> F
+    F --> G[EfficientNet-B0 Inference Engine]
+    G --> H[Sigmoid Logit: P(FAKE)]
+    H --> I{Decision Boundary: Threshold=0.5}
+    I -->|P >= 0.5| J[Classification: FAKE]
+    I -->|P < 0.5| K[Classification: REAL]
+    G --> L[Grad-CAM Target Layer features[-1]]
+    L --> M[Heatmap Attribution Visualization]
+```
+
+---
+
+## 3. Latency & Resource Budgets
+
+| Metric | Target Specification |
+| :--- | :--- |
+| **p50 Latency (CPU)** | $\le 65\text{ ms}$ |
+| **p95 Latency (CPU)** | $\le 140\text{ ms}$ |
+| **p50 Latency (Nvidia T4 GPU)** | $\le 15\text{ ms}$ |
+| **Memory Footprint (Inference)** | $\le 450\text{ MB RAM}$ |
+| **Checkpoint Footprint** | $16.3\text{ MB}$ (`final_deepfake_detector.pth`) |
+| **Throughput (Single CPU Worker)** | $\ge 15\text{ frames/sec}$ |
+
+---
+
+## 4. API Specification
+
+### `GET /health`
+Validates checkpoint existence, loaded architecture, and device availability (CPU/CUDA).
+
+### `POST /predict`
+* **Input**: Multipart image file (`image/jpeg`, `image/png`) or Base64 encoded payload.
+* **Output**:
+```json
+{
+  "label": "FAKE",
+  "fake_probability": 0.9421,
+  "confidence": 0.9421,
+  "face_detected": true,
+  "architecture": "EfficientNet",
+  "inference_time_ms": 48.2
+}
+```
+
+### `POST /explain`
+* **Input**: Image file.
+* **Output**: Returns base64 encoded PNG overlaying Grad-CAM activation heatmap onto the facial crop.
+
+---
+
+## 5. Security, Robustness & Failure Mitigations
+
+1. **Adversarial & Compression Robustness**: Preprocessing applies color jitter and scaling during training to resist JPEG compression noise artifacts.
+2. **Missing Face Fallback**: When no face is localized, inference evaluates the center-cropped canvas rather than throwing a 500 error.
+3. **Least Privilege Container**: Multi-stage Docker execution under non-root service account `appuser` (UID 10001).
