@@ -21,11 +21,18 @@ Deepfake Detection System is a binary image classifier that distinguishes REAL f
 ### **Project Structure**
 ```text
 DeepfakeDetectionSystem/
+├── api/main.py             # FastAPI inference API (/health, /predict)
 ├── app/app.py              # Streamlit dashboard
+├── configs/settings.py     # pydantic-settings configuration
 ├── data/                   # Dataset CSV and images (gitignored)
+├── demo_images/            # Curated sample REAL/FAKE images
 ├── models/                 # Trained checkpoints (gitignored)
 ├── notebooks/              # 10-step training notebook
+├── scripts/                # Demo image curation and inference smoke test
 ├── src/                    # Core Python modules
+├── tests/test_api.py       # API tests
+├── Dockerfile
+├── docker-compose.yml
 ├── requirements.txt
 ├── .env.example
 └── README.md
@@ -65,7 +72,7 @@ Place your trained checkpoint in `models/` as either:
 ### **Getting Started**
 ### **1. Clone Repository**
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/jegadeesh17/DeepfakeDetectionSystem.git
 cd DeepfakeDetectionSystem
 ```
 
@@ -96,7 +103,7 @@ Upload a suspect profile photo to the Streamlit app. The model returns a FAKE/RE
 ---
 ### **Future Improvements**
 - Add video/deepfake frame analysis
-- Deploy model via FastAPI for API access
+- Deploy the existing FastAPI service (`api/main.py`) for API access
 - Add test-time augmentation for more robust inference
 
 ---
